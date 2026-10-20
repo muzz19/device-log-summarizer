@@ -1,0 +1,146 @@
+# Section 1: Clean and Normalize Sensor Readings
+
+```python
+def clean_sensor_readings(values):
+    cleaned = []
+
+    for value in values:
+        if value is None:
+            continue
+
+        try:
+            number = float(value)
+        except (ValueError, TypeError):
+            continue
+
+        if number < 0:
+            continue
+
+        if number > 500.0:
+            number = 500.0
+
+        cleaned.append(number)
+
+    return cleaned
+
+
+# Test Case 1: Mixed valid and invalid values
+data1 = [100, "250.5", None, -10, "invalid", 600]
+print(clean_sensor_readings(data1))
+# Expected Output: [100.0, 250.5, 500.0]
+
+
+# Test Case 2: All invalid values
+data2 = [None, -5, "abc", -100]
+print(clean_sensor_readings(data2))
+# Expected Output: []
+
+
+# Test Case 3: Empty list
+data3 = []
+print(clean_sensor_readings(data3))
+# Expected Output: []
+
+
+
+
+
+
+
+# Section 2: Device Telemetry Data Processing
+
+```python
+import csv
+import json
+from collections import defaultdict
+
+
+def process_device_telemetry(input_file, output_file):
+    devices = defaultdict(lambda: {
+        "total_records": 0,
+        "total_temperature": 0.0,
+        "error_count": 0
+    })
+
+    # 1. Read CSV data and aggregate records by device_id
+    with open(input_file, "r", newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            device_id = row["device_id"].strip()
+            status = row["status"].strip().upper()
+            temperature = float(row["temperature"])
+
+            devices[device_id]["total_records"] += 1
+            devices[device_id]["total_temperature"] += temperature
+
+            if status == "ERROR":
+                devices[device_id]["error_count"] += 1
+
+    # 2. Calculate averages and filter devices
+    results = []
+
+    for device_id, data in devices.items():
+        average_temperature = (
+            data["total_temperature"] / data["total_records"]
+        )
+
+        if average_temperature <= 80.0:
+            results.append({
+                "device_id": device_id,
+                "total_records": data["total_records"],
+                "average_temperature": round(average_temperature, 2),
+                "error_count": data["error_count"]
+            })
+
+    # 3. Export results to JSON
+    with open(output_file, "w", encoding="utf-8") as file:
+        json.dump(results, file, indent=4)
+
+    # 4. Print summary table
+    print("\nDevice Telemetry Summary")
+    print("-" * 76)
+    print(
+        f"{'Device ID':<15}"
+        f"{'Total Records':<18}"
+        f"{'Average Temp':<20}"
+        f"{'Error Count':<15}"
+    )
+    print("-" * 76)
+
+    for device in results:
+        print(
+            f"{device['device_id']:<15}"
+            f"{device['total_records']:<18}"
+            f"{device['average_temperature']:<20.2f}"
+            f"{device['error_count']:<15}"
+        )
+
+    print("-" * 76)
+    print(f"Results exported to {output_file}")
+
+
+if __name__ == "__main__":
+    try:
+        process_device_telemetry(
+            "device_telemetry.csv",
+            "device_summary.json"
+        )
+    except FileNotFoundError:
+        print("Error: device_telemetry.csv was not found.")
+    except (ValueError, KeyError) as error:
+        print(f"Error: Invalid CSV data - {error}")
+```
+
+**Expected output file:** `device_summary.json`
+
+**How to run:**
+1. Save the code as `device_log_summarizer.py`.
+2. Place `device_telemetry.csv` in the same folder.
+3. Open a terminal in that folder and run:
+
+```bash
+python device_log_summarizer.py
+```
+
+**Note:** The actual statistics depend on the contents of your CSV file. Devices with an average temperature exactly equal to `80.0` are retained; only devices above `80.0` are excluded.

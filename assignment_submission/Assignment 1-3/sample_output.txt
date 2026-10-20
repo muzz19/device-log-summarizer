@@ -1,0 +1,18 @@
+Sensor readings tests:
+[100.0, 250.5, 500.0]
+[]
+[]
+
+Telemetry processing output:
+Device Telemetry Summary
+--------------------------------------------------------------------
+Device ID      Total Records     Average Temp      Error Count
+--------------------------------------------------------------------
+DEV-001        3                 43.67             1
+DEV-002        2                 79.00             0
+DEV-004        1                 68.50             0
+--------------------------------------------------------------------
+Results exported to device_summary.json
+
+Chart generation output:
+Chart saved to device_temperature_chart.png
